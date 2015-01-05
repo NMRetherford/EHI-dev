@@ -1,0 +1,600 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project activeEnvironment="Default" name="FlexAdaptor" resourceRoot="" soapui-version="5.0.0" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:testSuite name="TestSuite 1"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Sunglasses" searchProperties="true" id="3a07ecac-8d1d-4a12-a858-a218971c8f99"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=sendMessageRemotely&amp;arg1=${#TestSuite#arg1}&amp;arg2=sunglasses</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="Extract CorrelationId"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("i:");
+Integer endOfInteger = payload.indexOf(";");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String correlationId = payload.substring(startOfInteger + 2,endOfInteger);
+testRunner.testCase.testSuite.setPropertyValue( "correlationId", correlationId )
+
+</script></con:config></con:testStep><con:testStep type="httprequest" name="HTTP Test Request2"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getMessageStatus&amp;arg1=${#TestSuite#correlationId}</con:endpoint><con:request/><con:assertion type="Simple Contains" name="Contains 1" disabled="true"><con:configuration><token>'message delivered to cellular gateway' OR 'message acknowledged by car'</token><ignoreCase>true</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="CheckStatus"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("s:");
+Integer endOfInteger = payload.indexOf(":\"");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String status = payload.substring(startOfInteger + 2,endOfInteger);
+log.info "${status}"
+String message = payload.substring (endOfInteger + 2, endOfInteger +Integer.parseInt(status) + 2);
+log.info "${message}"
+testRunner.testCase.testSuite.setPropertyValue( "message", message )</script></con:config></con:testStep><con:testStep type="groovy" name="PollForComplete"><con:settings/><con:config><script>if (context.limit-- == 0) {
+  assert false
+}
+if (testRunner.testCase.testSuite.getPropertyValue("message") == 'message acknowledged by car') {
+  assert true
+}
+else (testRunner.testCase.testSuite.getPropertyValue("message") == 'message delivered to cellular gateway')
+{ 
+  sleep(2000 + (5 - context.limit) * 720)
+  log.info " - must make another Polling Request (${context.limit} requests remaining) for response to '${testRunner.testCase.getName()}' request; latest correlationId = '${testRunner.testCase.getPropertyValue("correlationId")}'"
+  testRunner.gotoStepByName("HTTP Test Request2")
+}</script></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>CurrentState</con:name><con:value xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/></con:property><con:property><con:name>Temp2</con:name><con:value/></con:property></con:properties></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Disable ignition and Lock door" searchProperties="true" id="3a14f450-224b-4c7c-9f1a-cdff81d05706"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=sendMessageRemotely&amp;arg1=${#TestSuite#arg1}&amp;arg2=lock_door</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="Extract CorrelationId"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("i:");
+Integer endOfInteger = payload.indexOf(";");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String correlationId = payload.substring(startOfInteger + 2,endOfInteger);
+testRunner.testCase.testSuite.setPropertyValue( "correlationId", correlationId )
+
+</script></con:config></con:testStep><con:testStep type="httprequest" name="HTTP Test Request2"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getMessageStatus&amp;arg1=${#TestSuite#correlationId}</con:endpoint><con:request/><con:assertion type="Simple Contains" name="Contains 1"><con:configuration><token>message acknowledged by car</token><ignoreCase>true</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="CheckStatus"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("s:");
+Integer endOfInteger = payload.indexOf(":\"");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String status = payload.substring(startOfInteger + 2,endOfInteger);
+log.info "${status}"
+String message = payload.substring (endOfInteger + 2, endOfInteger +Integer.parseInt(status) + 2);
+log.info "${message}"
+testRunner.testCase.testSuite.setPropertyValue( "message", message )</script></con:config></con:testStep><con:testStep type="groovy" name="PollForComplete"><con:settings/><con:config><script>if (context.limit-- == 0) {
+  assert false
+}
+if (testRunner.testCase.testSuite.getPropertyValue("message") == 'message acknowledged by car') {
+  assert true
+}
+else (testRunner.testCase.testSuite.getPropertyValue("message") == 'message delivered to cellular gateway')
+{ 
+  sleep(2000 + (5 - context.limit) * 720)
+  log.info " - must make another Polling Request (${context.limit} requests remaining) for response to '${testRunner.testCase.getName()}' request; latest correlationId = '${testRunner.testCase.getPropertyValue("correlationId")}'"
+  testRunner.gotoStepByName("HTTP Test Request2")
+}</script></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="unlock door and enable ignition" searchProperties="true" id="1e626451-3ca3-4769-b2a1-abf35ec6ca1b"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=sendMessageRemotely&amp;arg1=${#TestSuite#arg1}&amp;arg2=unlock_door</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="Extract CorrelationId"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("i:");
+Integer endOfInteger = payload.indexOf(";");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String correlationId = payload.substring(startOfInteger + 2,endOfInteger);
+testRunner.testCase.testSuite.setPropertyValue( "correlationId", correlationId )
+
+</script></con:config></con:testStep><con:testStep type="httprequest" name="HTTP Test Request2"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getMessageStatus&amp;arg1=${#TestSuite#correlationId}</con:endpoint><con:request/><con:assertion type="Simple Contains" name="Contains 1"><con:configuration><token>message acknowledged by car</token><ignoreCase>true</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="CheckStatus"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("s:");
+Integer endOfInteger = payload.indexOf(":\"");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String status = payload.substring(startOfInteger + 2,endOfInteger);
+log.info "${status}"
+String message = payload.substring (endOfInteger + 2, endOfInteger +Integer.parseInt(status) + 2);
+log.info "${message}"
+testRunner.testCase.testSuite.setPropertyValue( "message", message )</script></con:config></con:testStep><con:testStep type="groovy" name="PollForComplete"><con:settings/><con:config><script>if (context.limit-- == 0) {
+  assert false
+}
+if (testRunner.testCase.testSuite.getPropertyValue("message") == 'message acknowledged by car') {
+  assert true
+}
+else (testRunner.testCase.testSuite.getPropertyValue("message") == 'message delivered to cellular gateway')
+{ 
+  sleep(2000 + (5 - context.limit) * 720)
+  log.info " - must make another Polling Request (${context.limit} requests remaining) for response to '${testRunner.testCase.getName()}' request; latest correlationId = '${testRunner.testCase.getPropertyValue("correlationId")}'"
+  testRunner.gotoStepByName("HTTP Test Request2")
+}</script></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Just enable ignition" searchProperties="true" id="cdde60d5-ce1b-45ec-aac5-384efac4652a"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=sendMessageRemotely&amp;arg1=${#TestSuite#arg1}&amp;arg2=enable_ignition</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="Extract CorrelationId"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("i:");
+Integer endOfInteger = payload.indexOf(";");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String correlationId = payload.substring(startOfInteger + 2,endOfInteger);
+testRunner.testCase.testSuite.setPropertyValue( "correlationId", correlationId )
+
+</script></con:config></con:testStep><con:testStep type="httprequest" name="HTTP Test Request2"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getMessageStatus&amp;arg1=${#TestSuite#correlationId}</con:endpoint><con:request/><con:assertion type="Simple Contains" name="Contains 1" disabled="true"><con:configuration><token>message acknowledged by car</token><ignoreCase>true</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="CheckStatus"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("s:");
+Integer endOfInteger = payload.indexOf(":\"");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String status = payload.substring(startOfInteger + 2,endOfInteger);
+log.info "${status}"
+String message = payload.substring (endOfInteger + 2, endOfInteger +Integer.parseInt(status) + 2);
+log.info "${message}"
+testRunner.testCase.testSuite.setPropertyValue( "message", message )</script></con:config></con:testStep><con:testStep type="groovy" name="PollForComplete"><con:settings/><con:config><script>if (context.limit-- == 0) {
+  assert false
+}
+if (testRunner.testCase.testSuite.getPropertyValue("message") == 'message acknowledged by car') {
+  assert true
+}
+else (testRunner.testCase.testSuite.getPropertyValue("message") == 'message delivered to cellular gateway')
+{ 
+  sleep(2000 + (5 - context.limit) * 720)
+  log.info " - must make another Polling Request (${context.limit} requests remaining) for response to '${testRunner.testCase.getName()}' request; latest correlationId = '${testRunner.testCase.getPropertyValue("correlationId")}'"
+  testRunner.gotoStepByName("HTTP Test Request2")
+}</script></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>Status</con:name><con:value/></con:property></con:properties></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Just disable ignition" searchProperties="true" id="eb19781e-e6e5-4e2f-9f57-92fb5708ac46"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=sendMessageRemotely&amp;arg1=${#TestSuite#arg1}&amp;arg2=disable_ignition</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="Extract CorrelationId"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("i:");
+Integer endOfInteger = payload.indexOf(";");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String correlationId = payload.substring(startOfInteger + 2,endOfInteger);
+testRunner.testCase.testSuite.setPropertyValue( "correlationId", correlationId )
+
+</script></con:config></con:testStep><con:testStep type="httprequest" name="HTTP Test Request2"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getMessageStatus&amp;arg1=${#TestSuite#correlationId}</con:endpoint><con:request/><con:assertion type="Simple Contains" name="Contains 1"><con:configuration><token>message acknowledged by car</token><ignoreCase>true</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="groovy" name="CheckStatus"><con:settings/><con:config><script>def payload = context.httpResponse.responseContent
+log.info "${payload}"
+Integer startOfInteger = payload.indexOf("s:");
+Integer endOfInteger = payload.indexOf(":\"");
+log.info "startOfInteger $startOfInteger endOfInteger $endOfInteger"
+String status = payload.substring(startOfInteger + 2,endOfInteger);
+log.info "${status}"
+String message = payload.substring (endOfInteger + 2, endOfInteger +Integer.parseInt(status) + 2);
+log.info "${message}"
+testRunner.testCase.testSuite.setPropertyValue( "message", message )</script></con:config></con:testStep><con:testStep type="groovy" name="PollForComplete"><con:settings/><con:config><script>if (context.limit-- == 0) {
+  assert false
+}
+if (testRunner.testCase.testSuite.getPropertyValue("message") == 'message acknowledged by car') {
+  assert true
+}
+else (testRunner.testCase.testSuite.getPropertyValue("message") == 'message delivered to cellular gateway')
+{ 
+  sleep(2000 + (5 - context.limit) * 720)
+  log.info " - must make another Polling Request (${context.limit} requests remaining) for response to '${testRunner.testCase.getName()}' request; latest correlationId = '${testRunner.testCase.getPropertyValue("correlationId")}'"
+  testRunner.gotoStepByName("HTTP Test Request2")
+}</script></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="setCurrentWFobList" searchProperties="true" id="ec7c4cda-cb85-4552-ba6e-76f93d44e443"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=setCurrentWFobList&amp;arg1=${#TestSuite#arg1}&amp;arg2=D06AB100</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="getProvisionalLogLines" searchProperties="true" id="5337fe8a-5f60-4772-b11d-ba41d5083403"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getProvisionalLogLines&amp;arg1=${#TestSuite#arg1}&amp;arg2=</con:endpoint><con:request/><con:assertion type="Simple Contains" name="Contains"><con:configuration><token>LogEntry</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="get list of all the VINs" searchProperties="true" id="5245ed0e-d4a0-4ff6-b7b2-2fb7cecc1148"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getActiveVinsList&amp;arg1=&amp;arg2</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>-1</token><ignoreCase>true</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="getLFVinFromFullVin" searchProperties="true" id="79281f5e-09c5-4a44-adfa-bdb08a6d6b77"><con:settings/><con:testStep type="httprequest" name="HTTP Test Request"><con:settings/><con:config method="GET" xsi:type="con:HttpRequest" name="HTTP Test Request" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php?action=getLFVinFromFullVin&amp;arg1=${#TestSuite#arg1}&amp;arg2=</con:endpoint><con:request/><con:assertion type="Simple NotContains" name="Not Contains"><con:configuration><token>i:-1</token><ignoreCase>false</ignoreCase><useRegEx>false</useRegEx></con:configuration></con:assertion><con:credentials><con:authType>No Authorization</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:properties/></con:testCase><con:properties><con:property><con:name>Endpoint</con:name><con:value>http://devapv0166:9990/pcs/liveFleet/web-common/curl_test.php</con:value></con:property><con:property><con:name>correlationId</con:name><con:value>1524</con:value></con:property><con:property><con:name>arg1</con:name><con:value>276137</con:value></con:property><con:property><con:name>status</con:name><con:value>37</con:value></con:property><con:property><con:name>message</con:name><con:value>message acknowledged by car</con:value></con:property></con:properties><con:setupScript>context.limit = 5</con:setupScript></con:testSuite><con:testSuite name="TestSuite2"><con:settings/><con:runType>SEQUENTIAL</con:runType><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Unlock" searchProperties="true" id="63d309f8-ca7e-4f11-a4ac-0c3366e1ae35"><con:settings/><con:testStep type="httprequest" name="Send Unlock"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" name="Send Unlock" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>${#TestSuite#EndPoint}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                xmlns:tem="http://tempuri.org/"
+                xmlns:inv="http://schemas.datacontract.org/2004/07/Invers.Ics.Interface"
+                xmlns:inv1="http://schemas.datacontract.org/2004/07/Invers.DataTypes"
+                xmlns:inv2="http://invers.com">
+                <soapenv:Header />
+                <soapenv:Body>
+                           <tem:SendCommand>
+                                            <tem:task>
+                                                                <inv:CUCMDeliveryTime>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-07-22T18:00:00</inv1:UTCDateTime>
+                                                                </inv:CUCMDeliveryTime>
+                                                                <inv:CUCMNo>3</inv:CUCMNo>
+                                                                <inv:CommSystem>GPRS</inv:CommSystem>
+                                                                <inv:CryptMode>Default</inv:CryptMode>
+                                                                <inv:Destination>
+                                                                                <inv2:DestinationAddress>
+                                                                                                <inv2:MailAddress>
+                                                                                                                <inv2:BCC />
+                                                                                                                <inv2:CC />
+                                                                                                                <inv2:To />
+                                                                                                </inv2:MailAddress>
+                                                                                                <inv2:PhoneNo />
+                                                                                                <inv2:SIM>
+                                                                                                                <inv:GSMDataNo>${#TestSuite#GSMVoiceNo}</inv:GSMDataNo>
+                                                                                                                <inv:GSMVoiceNo>${#TestSuite#GSMVoiceNo}</inv:GSMVoiceNo>
+                                                                                                </inv2:SIM>
+                                                                                                <inv2:TCPHost>+13149151759</inv2:TCPHost>
+                                                                                                <inv2:TCPPort>0</inv2:TCPPort>
+                                                                                </inv2:DestinationAddress>
+                                                                                <inv2:DestinationType>BCSA2006</inv2:DestinationType>
+                                                                                <inv2:Firmwareversion>v4.15</inv2:Firmwareversion>
+                                                                                <inv2:OrgaNo>41006</inv2:OrgaNo>
+                                                                                <inv2:SourceNo>0</inv2:SourceNo>
+                                                                </inv:Destination>
+                                                                <inv:EndSend>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-07-22T20:00:00</inv1:UTCDateTime>
+                                                                </inv:EndSend>
+                                                                <inv:OrderNumber>0</inv:OrderNumber>
+                                                                <inv:PickedUp>false</inv:PickedUp>
+                                                                <inv:PickedUpUntil>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>1900-01-01T00:00:00.0000</inv1:UTCDateTime>
+                                                                </inv:PickedUpUntil>
+                                                                <inv:Priority>50</inv:Priority>
+                                                                <inv:SendingGroupList>
+                                                                                <inv:SendingGroup />
+                                                                </inv:SendingGroupList>
+                                                                <inv:StartSend>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-07-22T18:00:00</inv1:UTCDateTime>
+                                                                </inv:StartSend>
+                                                                <inv:TaskNumber>0</inv:TaskNumber>
+                                                                <inv:Timestamp>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-11-19T23:06:12</inv1:UTCDateTime>
+                                                                </inv:Timestamp>
+                                                                <inv:Type>Command</inv:Type>
+                                                                <!--Optional:-->
+                                                                <inv:Wait>false</inv:Wait>
+                                                                <!--Optional:-->
+                                                                <inv:WaitTimeout>0</inv:WaitTimeout>
+                                                                <!--Optional:-->
+                                                                <inv:Command>
+                                                                                <!--Optional:-->
+                                                                                <inv:GprsAddress>+1314-915-1759</inv:GprsAddress>
+                                                                                <!--Optional:-->
+                                                                                <inv:SMSAddress>+1314-915-1759</inv:SMSAddress>
+                                                                                <!--Optional:-->
+                                                                                <inv:Timestamp>2013-11-15T16:25:16.013-06:00</inv:Timestamp>
+                                                                                <!--Optional:-->
+                                                                                <inv:Type>DoorOpen</inv:Type>
+                                                                                <!--Optional:-->
+                                                                                <inv:Validity>10000</inv:Validity>
+                                                                </inv:Command>
+                                                </tem:task>
+                                </tem:SendCommand>
+                </soapenv:Body>
+</soapenv:Envelope>
+]]></con:request><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="XPath Match" name="XPath Match"><con:configuration><path>(//*[local-name()='TaskNumber'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:assertion type="XPath Match" name="ResponseType"><con:configuration><path>(//*[local-name()='SendCommandResponse'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:credentials><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="transfer" name="GetTaskNumber"><con:settings/><con:config xsi:type="con:PropertyTransfersStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:transfers setNullOnMissingSource="true" transferTextContent="true" failOnError="true" ignoreEmpty="false" transferToAll="false" useXQuery="false" entitize="false" transferChildNodes="false"><con:name>TaskNumber</con:name><con:sourceType>ResponseAsXml</con:sourceType><con:sourceStep>Send Unlock</con:sourceStep><con:sourcePath>(//*[local-name()='TaskNumber'])[1]</con:sourcePath><con:targetType>TaskNumber</con:targetType><con:targetStep>#TestSuite#</con:targetStep></con:transfers></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>CorrelationId</con:name><con:value xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/></con:property><con:property><con:name>CurrentState</con:name><con:value>Success</con:value></con:property></con:properties></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Lock" searchProperties="true" id="a1d0a180-5f9b-4540-99a7-d6de95d7ce7b"><con:settings/><con:testStep type="httprequest" name="Send Lock"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" name="Send Lock" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>${#TestSuite#EndPoint}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"
+                xmlns:tem="http://tempuri.org/"
+                xmlns:inv="http://schemas.datacontract.org/2004/07/Invers.Ics.Interface"
+                xmlns:inv1="http://schemas.datacontract.org/2004/07/Invers.DataTypes"
+                xmlns:inv2="http://invers.com">
+                <soapenv:Header />
+                <soapenv:Body>
+                                <tem:SendCommand>
+                                                <tem:task>
+                                                                <inv:CUCMDeliveryTime>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-07-22T18:00:00</inv1:UTCDateTime>
+                                                                </inv:CUCMDeliveryTime>
+                                                                <inv:CUCMNo>3</inv:CUCMNo>
+                                                                <inv:CommSystem>GPRS</inv:CommSystem>
+                                                                <inv:CryptMode>Default</inv:CryptMode>
+                                                                <inv:Destination>
+                                                                                <inv2:DestinationAddress>
+                                                                                                <inv2:MailAddress>
+                                                                                                                <inv2:BCC />
+                                                                                                                <inv2:CC />
+                                                                                                                <inv2:To />
+                                                                                                </inv2:MailAddress>
+                                                                                                <inv2:PhoneNo />
+                                                                                                <inv2:SIM>
+                                                                                                                <inv:GSMDataNo>${#TestSuite#GSMVoiceNo}</inv:GSMDataNo>
+                                                                                                                <inv:GSMVoiceNo>${#TestSuite#GSMVoiceNo}</inv:GSMVoiceNo>
+                                                                                                </inv2:SIM>
+                                                                                                <inv2:TCPHost>+13149151759</inv2:TCPHost>
+                                                                                                <inv2:TCPPort>0</inv2:TCPPort>
+                                                                                </inv2:DestinationAddress>
+                                                                                <inv2:DestinationType>BCSA2006</inv2:DestinationType>
+                                                                                <inv2:Firmwareversion>v4.15</inv2:Firmwareversion>
+                                                                                <inv2:OrgaNo>41006</inv2:OrgaNo>
+                                                                                <inv2:SourceNo>0</inv2:SourceNo>
+                                                                </inv:Destination>
+                                                                <inv:EndSend>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-07-22T20:00:00</inv1:UTCDateTime>
+                                                                </inv:EndSend>
+                                                                <inv:OrderNumber>0</inv:OrderNumber>
+                                                                <inv:PickedUp>false</inv:PickedUp>
+                                                                <inv:PickedUpUntil>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>1900-01-01T00:00:00.0000</inv1:UTCDateTime>
+                                                                </inv:PickedUpUntil>
+                                                                <inv:Priority>50</inv:Priority>
+                                                                <inv:SendingGroupList>
+                                                                                <inv:SendingGroup />
+                                                                </inv:SendingGroupList>
+                                                                <inv:StartSend>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-07-22T18:00:00</inv1:UTCDateTime>
+                                                                </inv:StartSend>
+                                                                <inv:TaskNumber>0</inv:TaskNumber>
+                                                                <inv:Timestamp>
+                                                                                <inv1:Timezone>20</inv1:Timezone>
+                                                                                <inv1:UTCDateTime>2013-11-19T23:06:12</inv1:UTCDateTime>
+                                                                </inv:Timestamp>
+                                                                <inv:Type>Command</inv:Type>
+                                                                <!--Optional:-->
+                                                                <inv:Wait>false</inv:Wait>
+                                                                <!--Optional:-->
+                                                                <inv:WaitTimeout>0</inv:WaitTimeout>
+                                                                <!--Optional:-->
+                                                                <inv:Command>
+                                                                                <!--Optional:-->
+                                                                                <inv:GprsAddress>+1314-915-1759</inv:GprsAddress>
+                                                                                <!--Optional:-->
+                                                                                <inv:SMSAddress>+1314-915-1759</inv:SMSAddress>
+                                                                                <!--Optional:-->
+                                                                                <inv:Timestamp>2013-11-15T16:25:16.013-06:00</inv:Timestamp>
+                                                                                <!--Optional:-->
+                                                                                <inv:Type>DoorClose</inv:Type>
+                                                                                <!--Optional:-->
+                                                                                <inv:Validity>10000</inv:Validity>
+                                                                </inv:Command>
+                                                </tem:task>
+                                </tem:SendCommand>
+                </soapenv:Body>
+</soapenv:Envelope>
+]]></con:request><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="XPath Match" name="XPath Match"><con:configuration><path>(//*[local-name()='TaskNumber'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:assertion type="XPath Match" name="ResponseType"><con:configuration><path>(//*[local-name()='SendCommandResponse'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:credentials><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>CorrelationId</con:name><con:value xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">1594</con:value></con:property><con:property><con:name>CurrentState</con:name><con:value>Success</con:value></con:property></con:properties></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Enable Immobilizer" searchProperties="true" id="a07c33ae-835a-4951-906c-0b87f28eef10"><con:settings/><con:testStep type="httprequest" name="ImmobolizerOn"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" name="ImmobolizerOn" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>${#TestSuite#EndPoint}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:inv2="http://invers.com" xmlns:inv1="http://schemas.datacontract.org/2004/07/Invers.DataTypes" xmlns:inv="http://schemas.datacontract.org/2004/07/Invers.Ics.Interface" xmlns:tem="http://tempuri.org/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+<soapenv:Header/>
+	<soapenv:Body>
+	<tem:SendConfig>
+	<tem:task>
+	<inv:CUCMDeliveryTime>
+		<inv1:Timezone>0</inv1:Timezone>
+		<inv1:UTCDateTime>0</inv1:UTCDateTime>
+		</inv:CUCMDeliveryTime>
+		<inv:CUCMNo>0</inv:CUCMNo>
+		<inv:CommSystem>0</inv:CommSystem>
+		<inv:CommSystemTags>0</inv:CommSystemTags>
+		<inv:CryptMode>0</inv:CryptMode>
+		<inv:CustomerId>0</inv:CustomerId>
+	<inv:Destination>
+	<inv2:DestinationAddress>
+		<inv2:Fax>0</inv2:Fax>
+		<inv2:MailAddress>
+		<inv2:BCC>
+	<inv:SimpleMailAddress>
+		<inv:Address>0</inv:Address>
+		<inv:DisplayName>0</inv:DisplayName>
+	</inv:SimpleMailAddress>
+		</inv2:BCC>
+		<inv2:CC>
+	<inv:SimpleMailAddress>
+		<inv:Address>0</inv:Address>
+		<inv:DisplayName>0</inv:DisplayName>
+	</inv:SimpleMailAddress>
+		</inv2:CC>
+		<inv2:From>
+			<inv:Address>0</inv:Address>
+			<inv:DisplayName>0</inv:DisplayName>
+		</inv2:From>
+	<inv2:Password>0</inv2:Password>
+	<inv2:Priority>0</inv2:Priority>
+<inv2:ReplyTo>
+<inv:Address>0</inv:Address>
+<inv:DisplayName>0</inv:DisplayName>
+</inv2:ReplyTo>
+<inv2:Sender>
+<inv:Address>0</inv:Address>
+<inv:DisplayName>0</inv:DisplayName>
+</inv2:Sender>
+<inv2:Server>0</inv2:Server>
+<inv2:To>
+<inv:SimpleMailAddress>
+<inv:Address>0</inv:Address>
+<inv:DisplayName>0</inv:DisplayName>
+</inv:SimpleMailAddress>
+</inv2:To>
+<inv2:UserName>0</inv2:UserName>
+</inv2:MailAddress>
+<inv2:PhoneNo>0</inv2:PhoneNo>
+<inv2:SIM>
+<inv:GSMDataNo>0</inv:GSMDataNo>
+<inv:GSMFaxNo>0</inv:GSMFaxNo>
+<inv:GSMProvider>0</inv:GSMProvider>
+<inv:GSMVoiceNo>${#TestSuite#GSMVoiceNo}</inv:GSMVoiceNo>
+<inv:ID>0</inv:ID>
+</inv2:SIM>
+<inv2:TCPHost>0</inv2:TCPHost>
+<inv2:TCPPort>0</inv2:TCPPort>
+</inv2:DestinationAddress>
+<inv2:DestinationType>0</inv2:DestinationType>
+<inv2:Firmwareversion>0</inv2:Firmwareversion>
+<inv2:OrgaNo>0</inv2:OrgaNo>
+<inv2:SourceNo>0</inv2:SourceNo>
+</inv:Destination>
+<inv:EndSend>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:EndSend>
+<inv:OrderNumber>0</inv:OrderNumber>
+<inv:PickedUp>0</inv:PickedUp>
+<inv:PickedUpUntil>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:PickedUpUntil>
+<inv:Priority>0</inv:Priority>
+<inv:SendingGroupList>
+<inv:SendingGroup>
+<inv:GroupId>0</inv:GroupId>
+<inv:GroupName>0</inv:GroupName>
+<inv:Priority>0</inv:Priority>
+<inv:TaskId>0</inv:TaskId>
+</inv:SendingGroup>
+</inv:SendingGroupList>
+<inv:SequenceNumber>0</inv:SequenceNumber>
+<inv:StartSend>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:StartSend>
+<inv:TaskNumber>0</inv:TaskNumber>
+<inv:Timestamp>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:Timestamp>
+<inv:Type>0</inv:Type>
+<inv:Wait>0</inv:Wait>
+<inv:WaitTimeout>0</inv:WaitTimeout>
+<inv:Config>
+<inv:Parameters>
+<inv:list>
+<inv:AdditionalParameter>
+<inv:Name>ImmobilizerType</inv:Name>
+<inv:ParamType>0</inv:ParamType>
+<inv:Value>2</inv:Value>
+</inv:AdditionalParameter>
+</inv:list>
+</inv:Parameters>
+</inv:Config>
+</tem:task>
+</tem:SendConfig>
+</soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="XPath Match" name="XPath Match"><con:configuration><path>(//*[local-name()='TaskNumber'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:assertion type="XPath Match" name="ResponseType"><con:configuration><path>(//*[local-name()='SendConfigResponse'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:credentials><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>CorrelationId</con:name><con:value xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/></con:property><con:property><con:name>CurrentState</con:name><con:value>Success</con:value></con:property></con:properties></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="Disengage Immobilizer" searchProperties="true" id="64834857-1480-499b-b74a-d832a8f1e8bf"><con:settings/><con:testStep type="httprequest" name="ImmobolizerOff"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" name="ImmobolizerOff" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>${#TestSuite#EndPoint}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:inv2="http://invers.com" xmlns:inv1="http://schemas.datacontract.org/2004/07/Invers.DataTypes" xmlns:inv="http://schemas.datacontract.org/2004/07/Invers.Ics.Interface" xmlns:tem="http://tempuri.org/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+<soapenv:Header/>
+	<soapenv:Body>
+	<tem:SendConfig>
+	<tem:task>
+	<inv:CUCMDeliveryTime>
+		<inv1:Timezone>0</inv1:Timezone>
+		<inv1:UTCDateTime>0</inv1:UTCDateTime>
+		</inv:CUCMDeliveryTime>
+		<inv:CUCMNo>0</inv:CUCMNo>
+		<inv:CommSystem>0</inv:CommSystem>
+		<inv:CommSystemTags>0</inv:CommSystemTags>
+		<inv:CryptMode>0</inv:CryptMode>
+		<inv:CustomerId>0</inv:CustomerId>
+	<inv:Destination>
+	<inv2:DestinationAddress>
+		<inv2:Fax>0</inv2:Fax>
+		<inv2:MailAddress>
+		<inv2:BCC>
+	<inv:SimpleMailAddress>
+		<inv:Address>0</inv:Address>
+		<inv:DisplayName>0</inv:DisplayName>
+	</inv:SimpleMailAddress>
+		</inv2:BCC>
+		<inv2:CC>
+	<inv:SimpleMailAddress>
+		<inv:Address>0</inv:Address>
+		<inv:DisplayName>0</inv:DisplayName>
+	</inv:SimpleMailAddress>
+		</inv2:CC>
+		<inv2:From>
+			<inv:Address>0</inv:Address>
+			<inv:DisplayName>0</inv:DisplayName>
+		</inv2:From>
+	<inv2:Password>0</inv2:Password>
+	<inv2:Priority>0</inv2:Priority>
+<inv2:ReplyTo>
+<inv:Address>0</inv:Address>
+<inv:DisplayName>0</inv:DisplayName>
+</inv2:ReplyTo>
+<inv2:Sender>
+<inv:Address>0</inv:Address>
+<inv:DisplayName>0</inv:DisplayName>
+</inv2:Sender>
+<inv2:Server>0</inv2:Server>
+<inv2:To>
+<inv:SimpleMailAddress>
+<inv:Address>0</inv:Address>
+<inv:DisplayName>0</inv:DisplayName>
+</inv:SimpleMailAddress>
+</inv2:To>
+<inv2:UserName>0</inv2:UserName>
+</inv2:MailAddress>
+<inv2:PhoneNo>0</inv2:PhoneNo>
+<inv2:SIM>
+<inv:GSMDataNo>0</inv:GSMDataNo>
+<inv:GSMFaxNo>0</inv:GSMFaxNo>
+<inv:GSMProvider>0</inv:GSMProvider>
+<inv:GSMVoiceNo>${#TestSuite#GSMVoiceNo}</inv:GSMVoiceNo>
+<inv:ID>0</inv:ID>
+</inv2:SIM>
+<inv2:TCPHost>0</inv2:TCPHost>
+<inv2:TCPPort>0</inv2:TCPPort>
+</inv2:DestinationAddress>
+<inv2:DestinationType>0</inv2:DestinationType>
+<inv2:Firmwareversion>0</inv2:Firmwareversion>
+<inv2:OrgaNo>0</inv2:OrgaNo>
+<inv2:SourceNo>0</inv2:SourceNo>
+</inv:Destination>
+<inv:EndSend>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:EndSend>
+<inv:OrderNumber>0</inv:OrderNumber>
+<inv:PickedUp>0</inv:PickedUp>
+<inv:PickedUpUntil>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:PickedUpUntil>
+<inv:Priority>0</inv:Priority>
+<inv:SendingGroupList>
+<inv:SendingGroup>
+<inv:GroupId>0</inv:GroupId>
+<inv:GroupName>0</inv:GroupName>
+<inv:Priority>0</inv:Priority>
+<inv:TaskId>0</inv:TaskId>
+</inv:SendingGroup>
+</inv:SendingGroupList>
+<inv:SequenceNumber>0</inv:SequenceNumber>
+<inv:StartSend>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:StartSend>
+<inv:TaskNumber>0</inv:TaskNumber>
+<inv:Timestamp>
+<inv1:Timezone>0</inv1:Timezone>
+<inv1:UTCDateTime>0</inv1:UTCDateTime>
+</inv:Timestamp>
+<inv:Type>0</inv:Type>
+<inv:Wait>0</inv:Wait>
+<inv:WaitTimeout>0</inv:WaitTimeout>
+<inv:Config>
+<inv:Parameters>
+<inv:list>
+<inv:AdditionalParameter>
+<inv:Name>ImmobilizerType</inv:Name>
+<inv:ParamType>0</inv:ParamType>
+<inv:Value>1</inv:Value>
+</inv:AdditionalParameter>
+</inv:list>
+</inv:Parameters>
+</inv:Config>
+</tem:task>
+</tem:SendConfig>
+</soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="XPath Match" name="XPath Match"><con:configuration><path>(//*[local-name()='TaskNumber'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:assertion type="XPath Match" name="ResponseType"><con:configuration><path>(//*[local-name()='SendConfigResponse'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:credentials><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>CorrelationId</con:name><con:value xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/></con:property><con:property><con:name>CurrentState</con:name><con:value>Success</con:value></con:property></con:properties></con:testCase><con:testCase failOnError="true" failTestCaseOnErrors="true" keepSession="false" maxResults="0" name="RemoteStatus" searchProperties="true" id="9be2b31b-7045-4448-8a70-d0fcdb488289"><con:settings/><con:testStep type="httprequest" name="GetCarStatus"><con:settings/><con:config method="POST" xsi:type="con:HttpRequest" name="GetCarStatus" postQueryString="false" mediaType="application/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:endpoint>${#TestSuite#EndPoint}</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:inv2="http://invers.com" xmlns:inv1="http://schemas.datacontract.org/2004/07/Invers.DataTypes" xmlns:inv="http://schemas.datacontract.org/2004/07/Invers.Ics.Interface" xmlns:tem="http://tempuri.org/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">
+<soapenv:Header/>
+<soapenv:Body>
+<tem:SendDemandRemote>
+<tem:task>
+<inv:CUCMDeliveryTime>
+<inv1:Timezone>20</inv1:Timezone>
+<inv1:UTCDateTime>2013-07-22T18:00:00</inv1:UTCDateTime>
+</inv:CUCMDeliveryTime>
+<inv:CUCMNo>3</inv:CUCMNo>
+<inv:CommSystem>GPRS</inv:CommSystem>
+<inv:CryptMode>Default</inv:CryptMode>
+<inv:Destination>
+<inv2:DestinationAddress>
+<inv2:MailAddress>
+<inv2:BCC/>
+<inv2:CC/>
+<inv2:To/>
+</inv2:MailAddress>
+<inv2:PhoneNo/>
+<inv2:SIM>
+<inv:GSMDataNo>${#TestSuite#GSMVoiceNo}</inv:GSMDataNo>
+<inv:GSMVoiceNo>${#TestSuite#GSMVoiceNo}</inv:GSMVoiceNo>
+</inv2:SIM>
+<inv2:TCPHost>+13149151759</inv2:TCPHost>
+<inv2:TCPPort>0</inv2:TCPPort>
+</inv2:DestinationAddress>
+<inv2:DestinationType>BCSA2006</inv2:DestinationType>
+<inv2:Firmwareversion>v4.15</inv2:Firmwareversion>
+<inv2:OrgaNo>41006</inv2:OrgaNo>
+<inv2:SourceNo>0</inv2:SourceNo>
+</inv:Destination>
+<inv:EndSend>
+<inv1:Timezone>20</inv1:Timezone>
+<inv1:UTCDateTime>2013-07-22T20:00:00</inv1:UTCDateTime>
+</inv:EndSend>
+<inv:OrderNumber>0</inv:OrderNumber>
+<inv:PickedUp>false</inv:PickedUp>
+<inv:PickedUpUntil>
+<inv1:Timezone>20</inv1:Timezone>
+<inv1:UTCDateTime>1900-01-01T00:00:00.0000</inv1:UTCDateTime>
+</inv:PickedUpUntil>
+<inv:Priority>50</inv:Priority>
+<inv:SendingGroupList>
+<inv:SendingGroup/>
+</inv:SendingGroupList>
+<inv:StartSend>
+<inv1:Timezone>20</inv1:Timezone>
+<inv1:UTCDateTime>2013-07-22T18:00:00</inv1:UTCDateTime>
+</inv:StartSend>
+<inv:TaskNumber>0</inv:TaskNumber>
+<inv:Timestamp>
+<inv1:Timezone>20</inv1:Timezone>
+<inv1:UTCDateTime>2013-11-19T23:06:12</inv1:UTCDateTime>
+</inv:Timestamp>
+<inv:Type>DemandRemote</inv:Type>
+<inv:Wait>false</inv:Wait>
+<inv:WaitTimeout>0</inv:WaitTimeout>
+<inv:DemandRemote>
+<inv:CarName>Test BCSA2006</inv:CarName>
+<inv:MailAddress>nichole.retherford@ehi.com</inv:MailAddress>
+<inv:RemoteId>1</inv:RemoteId>
+</inv:DemandRemote>
+</tem:task>
+</tem:SendDemandRemote>
+</soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:assertion type="Valid HTTP Status Codes" name="Valid HTTP Status Codes"><con:configuration><codes>200</codes></con:configuration></con:assertion><con:assertion type="XPath Match" name="XPath Match"><con:configuration><path>(//*[local-name()='TaskNumber'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:assertion type="XPath Match" name="ResponseType"><con:configuration><path>(//*[local-name()='SendDemandRemoteResponse'])[1]</path><content>*</content><allowWildcards>true</allowWildcards><ignoreNamspaceDifferences>false</ignoreNamspaceDifferences><ignoreComments>false</ignoreComments></con:configuration></con:assertion><con:credentials><con:selectedAuthProfile>Basic</con:selectedAuthProfile><con:addedBasicAuthenticationTypes>Basic</con:addedBasicAuthenticationTypes><con:authType>Global HTTP Settings</con:authType></con:credentials><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:parameters/></con:config></con:testStep><con:testStep type="transfer" name="GetTaskNumber"><con:settings/><con:config xsi:type="con:PropertyTransfersStep" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:transfers setNullOnMissingSource="true" transferTextContent="true" failOnError="true" ignoreEmpty="false" transferToAll="false" useXQuery="false" entitize="false" transferChildNodes="false"><con:name>TaskNumber</con:name><con:sourceType>ResponseAsXml</con:sourceType><con:sourceStep>GetCarStatus</con:sourceStep><con:sourcePath>(//*[local-name()='TaskNumber'])[1]</con:sourcePath><con:targetType>TaskNumber</con:targetType><con:targetStep>#TestSuite#</con:targetStep></con:transfers></con:config></con:testStep><con:setupScript>context.limit = 5</con:setupScript><con:properties><con:property><con:name>CorrelationId</con:name><con:value xsi:nil="true" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/></con:property><con:property><con:name>CurrentState</con:name><con:value>Success</con:value></con:property></con:properties></con:testCase><con:properties><con:property><con:name>Vin.Registered</con:name><con:value>1G11E5SL2EF276137</con:value></con:property><con:property><con:name>EndPoint</con:name><con:value>http://devapv0166:9990/ComService</con:value></con:property><con:property><con:name>GSMVoiceNo</con:name><con:value>+123456789</con:value></con:property><con:property><con:name>TaskNumber</con:name><con:value>2160</con:value></con:property></con:properties></con:testSuite><con:properties><con:property><con:name>ResponseID</con:name></con:property><con:property><con:name>Status</con:name><con:value>Complete</con:value></con:property></con:properties><con:wssContainer/><con:oAuth2ProfileContainer/><con:sensitiveInformation/></con:soapui-project>
